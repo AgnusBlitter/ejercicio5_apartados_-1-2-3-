@@ -1,0 +1,370 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "region": {
+            "type": "string",
+            "defaultValue": "westeurope",
+            "allowedValues": [
+                "northeurope",
+                "swedencentral",
+                "uksouth",
+                "westeurope",
+                "francecentral",
+                "germanywestcentral",
+                "norwayeast",
+                "switzerlandnorth",
+                "francesouth",
+                "germanynorth",
+                "norwaywest",
+                "switzerlandwest",
+                "ukwest"
+            ],
+            "metadata": {
+                "description": "Location in Europe where to deploy the VM."
+            }
+        },
+        "project": {
+          "type": "string",
+          "metadata": {
+            "description": "Name of the resources to generate."
+          }
+        },
+        "availabilityZone": {
+            "type": "string",
+            "defaultValue": "1",
+            "allowedValues": [ "1", "2", "3" ],
+            "metadata": {
+                "description": "Select Availability Zone."
+            }
+        },
+        "networkInterfaceName": {
+          "type": "string",
+          "defaultValue": "vm",
+          "metadata": {
+            "description": "The name of Network Interface Name."
+          }
+        },
+        "enableAcceleratedNetworking": {
+          "type": "Bool",
+          "defaultValue": true,
+          "metadata": {
+            "description": "Check Accelerated Networking."
+          }
+        },
+        "networkSecurityGroupName": {
+          "type": "string",
+          "defaultValue": "VM",
+          "metadata": {
+            "description": "The name of Network Security."
+          }
+        },
+        "networkSecurityGroupRules": {
+            "type": "Array",
+            "defaultValue": [
+                {
+                    "name": "SSH",
+                    "properties": {
+                        "priority": 300,
+                        "protocol": "TCP",
+                        "access": "Allow",
+                        "direction": "Inbound",
+                        "sourceAddressPrefix": "*",
+                        "sourcePortRange": "*",
+                        "destinationAddressPrefix": "*",
+                        "destinationPortRange": "22"
+                    }
+                },
+                {
+                    "name": "HTTP",
+                    "properties": {
+                        "priority": 320,
+                        "protocol": "TCP",
+                        "access": "Allow",
+                        "direction": "Inbound",
+                        "sourceAddressPrefix": "*",
+                        "sourcePortRange": "*",
+                        "destinationAddressPrefix": "*",
+                        "destinationPortRange": "80"
+                    }
+                }
+            ],
+            "metadata": {
+                "description": "Properties of Network Security Group Rules."
+            }
+        },
+        "publicIpAddressType": {
+          "type": "string",
+          "defaultValue": "Static",
+          "metadata": {
+            "description": "Type of Public IP Type."
+          }
+        },
+        "publicIpAddressSku": {
+          "type": "string",
+          "defaultValue": "Standard",
+          "metadata": {
+            "description": "Type of Public IP Address Sku."
+          }
+        },
+        "pipDeleteOption": {
+          "type": "string",
+          "defaultValue": "Delete",
+          "metadata": {
+            "description": "Check pip Delete."
+          }
+        },
+        "virtualMachineName": {
+            "type": "string",
+            "defaultValue": "VM",
+            "metadata": {
+                "description": "Name of Virtual Machine."
+            }
+        },
+        "osDiskType": {
+            "type": "string",
+            "defaultValue": "StandardSSD_LRS",
+            "metadata": {
+                "description": "Type of OS Disk."
+            }
+        },
+        "osDiskDeleteOption": {
+          "type": "string",
+          "defaultValue": "Delete",
+          "metadata": {
+            "description": "Check OS Disk Delete Option."
+          }
+        },
+        "vmName": {
+          "type": "string",
+          "defaultValue": "-vm",
+          "metadata": {
+            "description": "The name of Virtual Machine."
+          }
+        },
+        "virtualMachineSize": {
+          "type": "string",
+          "defaultValue": "Standard_DS1_v2",
+          "metadata": {
+            "description": "Size of Virtual Machine."
+          }
+        },
+        "nicDeleteOption": {
+          "type": "string",
+          "defaultValue": "Delete",
+          "metadata": {
+            "description": "Check nic Delete Option."
+          }
+        },
+        "adminUsername": {
+            "type": "String",
+            "metadata": {
+                "description": "Name of admin user."
+            }
+        },
+        "adminPublicKey": {
+            "type": "SecureString",
+            "metadata": {
+                "description": "Type of authentication to use on the Virtual Machine. SSH key is recommended."
+            }
+        },
+        "pathKeys": {
+          "type": "string",
+          "defaultValue": "/home/azureuser/.ssh/authorized_keys",
+          "metadata": {
+            "description": "Path private keys."
+          }
+        }
+    },
+    "variables": {
+        "vnetName": "[concat(parameters('project'), '-vnet')]",
+        "subnetName": "[concat(parameters('project'), '-snet')]",
+        "vnetAddressPrefixes": "10.0.0.0/16",
+        "subnetAddressPrefix": "10.0.0.0/24",
+
+        "networkInterfaceName": "[concat(parameters('project'), '-nin')]",
+        "networkSecurityGroupName": "[concat(parameters('project'), '-nsg')]",
+        "publicIPAddressName": "[concat(parameters('project'), '-pip')]",
+
+        "virtualMachineName": "[concat(parameters('project'), parameters('vmName'))]",
+
+        "zones": [ "1", "2", "3" ]
+    },
+    "resources": [
+        {
+          "type": "Microsoft.Network/virtualNetworks",
+          "apiVersion": "2020-05-01",
+          "name": "[variables('vnetName')]",
+          "location": "[parameters('region')]",
+          "properties": {
+            "addressSpace": {
+              "addressPrefixes": [
+                "[variables('vnetAddressPrefixes')]"
+              ]
+            },
+            "subnets": [
+              {
+                "name": "[variables('subnetName')]",
+                "properties": {
+                    "addressPrefix": "[variables('subnetAddressPrefix')]",
+                    "delegations": [],
+                    "privateEndpointNetworkPolicies": "Disabled",
+                    "privateLinkServiceNetworkPolicies": "Enabled"                }
+              }
+            ]
+          }
+        },
+        {
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2019-02-01",
+            "name": "[variables('networkSecurityGroupName')]",
+            "location": "[parameters('region')]",
+            "properties": {
+                "securityRules": "[parameters('networkSecurityGroupRules')]"
+            }
+        },
+        {
+            "type": "Microsoft.Network/publicIpAddresses",
+            "apiVersion": "2020-08-01",
+            "name": "[variables('publicIPAddressName')]",
+            "location": "[parameters('region')]",
+            "sku": {
+                "name": "[parameters('publicIpAddressSku')]"
+            },
+            "zones": [ "[parameters('availabilityZone')]"
+            ],
+            "properties": {
+                "publicIpAllocationMethod": "[parameters('publicIpAddressType')]"
+            }
+        }, 
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2021-08-01",
+            "name": "[variables('networkInterfaceName')]",
+            "location": "[parameters('region')]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/networkSecurityGroups/', variables('networkSecurityGroupName'))]",
+                "[concat('Microsoft.Network/publicIpAddresses/', variables('publicIPAddressName'))]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('vnetName'), variables('subnetName'))]"
+                            },
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIpAddress": {
+                                "id": "[resourceId(resourceGroup().name, 'Microsoft.Network/publicIpAddresses', variables('publicIPAddressName'))]",
+                                "properties": {
+                                    "deleteOption": "[parameters('pipDeleteOption')]"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "enableAcceleratedNetworking": "[parameters('enableAcceleratedNetworking')]",
+                "networkSecurityGroup": {
+                    "id": "[resourceId(resourceGroup().name, 'Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroupName'))]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2022-03-01",
+            "name": "[variables('virtualMachineName')]",
+            "location": "[parameters('region')]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/networkInterfaces/', variables('networkInterfaceName'))]"
+            ],
+            "zones": [
+                "[parameters('availabilityZone')]"
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "[parameters('virtualMachineSize')]"
+                },
+                "storageProfile": {
+                    "osDisk": {
+                        "createOption": "fromImage",
+                        "managedDisk": {
+                            "storageAccountType": "[parameters('osDiskType')]"
+                        },
+                        "deleteOption": "[parameters('osDiskDeleteOption')]"
+                    },
+                    "imageReference": {
+                        "publisher": "canonical",
+                        "offer": "0001-com-ubuntu-server-focal",
+                        "sku": "20_04-lts-gen2",
+                        "version": "latest"
+                    }
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfaceName'))]",
+                            "properties": {
+                                "deleteOption": "[parameters('nicDeleteOption')]"
+                            }
+                        }
+                    ]
+                },
+                "osProfile": {
+                    "computerName": "[variables('virtualMachineName')]",
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "linuxConfiguration": {
+                        "disablePasswordAuthentication": true,
+                        "ssh": {
+                            "publicKeys": [
+                                {
+                                    "path": "[parameters('pathKeys')]",
+                                    "keyData": "[parameters('adminPublicKey')]"
+                                }
+                            ]
+                        }
+                    }
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": true
+                    }
+                }
+            }
+        }
+    ],
+    "outputs": {
+        "resourceGroup": {
+            "type": "String",
+            "value": "[concat('Resource Group: ', resourceGroup().name)]"
+        },
+        "region": {
+            "type": "string",
+            "value": "[concat('Location in Europe: ', parameters('region'))]"
+        },
+        "adminUsername": {
+            "type": "String",
+            "value": "[concat('Admin UserName: ', parameters('adminUsername'))]"
+        },
+        "vnetName": {
+            "type": "string",
+            "value": "[concat('VNET: ', variables('vnetName'))]"
+        },
+        "subnetName": {
+            "type": "string",
+            "value": "[concat('SNET: ', variables('subnetName'))]"
+        },
+        "publicIPAddressName": {
+            "type": "string",
+            "value": "[concat('Public IP: ', variables('publicIPAddressName'))]"
+        },
+        "virtualMachineName": {
+            "type": "string",
+            "value": "[concat('Virtual Machine Name: ', variables('virtualMachineName'))]"
+        },
+        "availabilityZone": {
+            "type": "string",
+            "value": "[concat('Availability Zone: ', parameters('availabilityZone'))]"
+        }
+    }
+}

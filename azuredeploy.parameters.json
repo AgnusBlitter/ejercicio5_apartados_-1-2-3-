@@ -1,0 +1,14 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "region": { "value": "westeurope" },
+        "project": { "value": "thor" },
+        "availabilityZone": { "value": "1" },
+        "vmName": { "value": "-vm" },      
+        "adminUsername": { "value": "azureuser" },
+        "adminPublicKey": {
+            "value": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC9YIbbEW2e1EyCcgvPHFYe3A+z7Nne56HzdHCt0STIW8GkISs2F2T5L6xCGEhTnup3/FVDTZ+iNo0jlfU9kN+k985xdvL4LQiL22I7U6w8pBMSnNvKx4sARFF6cy48bev+1Gu4g8OTrjwSfCJosHDpurvAjAPw+Wu4UIf+Cxk5jkrc+BUy3DAVXN4jAm9MlF5GxPLYuHXBnMG8X8Nd2V70FYBzjkdshOFEk8qmrTDOOwDZuPkmSZJChKK7a/pDqHckN6DKCRPHKzgSNjkV7pxIlK/UV3y47It7iSw5YLnO3KkQHrrZKYJQh1LDVmR5ai2E68SIDDfNPW7aGoUZ+ZI05D/n69Ca4WLAx9IJZlYGthRamB8A16P8vRFQNWSUHtsPumQUiGOUzHU3dMmKtFlbyiZtNEJSYW79P0/P5u9XR7cIk6YJRskq1ZlmhFui+CnkX86kWc3jrR5o7juxz2KCi7Op7k9uSfVnfKFAP8LVjOqWDxYGzlb2pGnv56u6MyHdPVTSYho0Ud4xlPcqgFUYypTSkLrKmTTViOdE/lGQoz7V+nHFKJ/V7MR+UIkn8RjZpDf1NO9lDD9gnubdU60kbb+3ncARUpG4MxXKYYISu4YnP3VVt+EZqTXGqEgle2DnoZFuVvdQ7vWUQNQFQGUOTjjYmNHw/cu9VYDkcUP9kQ== azureuser@myserver"
+        }
+    }
+}
